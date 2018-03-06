@@ -6,6 +6,7 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+# 使用selenium抓取ajax异步加载的内容
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -110,29 +111,40 @@ class TaobaoDownloaderMiddleware(object):
 # 自定义中间件 -- js
 class JsMiddleware(object):
 	# 初始化  发现每次请求都会打开一个浏览器？？
-	def __init__(self):
-		# 设置不加载图片
-		chrome_options = webdriver.ChromeOptions() # 设置options
-		prefs = {"profile.managed_default_content_settings.images":2} # 不加图片
-		chrome_options.add_experimental_option('prefs',prefs)
-		self.driver = webdriver.Chrome(chrome_options=chrome_options)
+	# def __init__(self):
+	# 	# 设置不加载图片
+	# 	chrome_options = webdriver.ChromeOptions() # 设置options
+	# 	prefs = {"profile.managed_default_content_settings.images":2} # 不加图片
+	# 	chrome_options.add_experimental_option('prefs',prefs)
+	# 	self.driver = webdriver.Chrome(chrome_options=chrome_options)
+	#
+	# # request -- 处理的request  spider -- 该request对应的spider
+	# def process_request(self,request,spider):
+	# 	# 请求的url  --- 这里重写了download middleware 需要在配置中改一下
+	# 	url = request.url
+	# 	print(url)
+	# 	self.driver.get(url)
+	# 	# 获得输入框
+	# 	search_input = WebDriverWait(self.driver,10).until(
+	# 		EC.presence_of_element_located((By.CSS_SELECTOR, "#q"))
+	# 	)
+	# 	# 输入要查询的东西
+	# 	search_input.send_keys(input('请输入您想查询的内容>>>:'))
+	# 	# 查找搜索按钮
+	# 	search_btn = self.driver.find_element_by_css_selector('#J_TSearchForm > div.search-button > button')
+	# 	# 点击搜索按钮
+	# 	search_btn.click()
+	# 	# 这里用退出driver ---解决浏览器不退出问题 行不通-----
+	# 	self.driver.quit()
+	#   HtmlResponse继承TextResponse,TextResponse继承Response
+	#   return HtmlResponse(url=self.driver.current_url,body=self.driver.page_source,encoding='utf-8',request=request)
 
-	# request -- 处理的request  spider -- 该request对应的spider
-	def process_request(self,request,spider):
-		# 请求的url  --- 这里重写了download middleware 需要在配置中改一下
-		url = request.url
-		print(url)
-		self.driver.get(url)
-		# 获得输入框
-		search_input = WebDriverWait(self.driver,10).until(
-			EC.presence_of_element_located((By.CSS_SELECTOR, "#q"))
-		)
-		# 输入要查询的东西
-		search_input.send_keys(input('请输入您想查询的内容>>>:'))
-		# 查找搜索按钮
-		search_btn = self.driver.find_element_by_css_selector('#J_TSearchForm > div.search-button > button')
-		# 点击搜索按钮
-		search_btn.click()
-		return HtmlResponse(url=self.driver.current_url,body=self.driver.page_source,encoding='utf-8',request=request)
-
+	# 解决爬虫自动关闭浏览器 -- 需要用到scrapy的signals信号和dispatcher分发器
+	# spider_close() -- 爬虫结束 释放资源
+	def process_request(self, request, spider):
+		if spider.name == 'taobao':
+			print(request.url)
+			spider.browser.get(request.url)
+			return HtmlResponse(url=spider.browser.current_url, body=spider.browser.page_source, encoding='utf-8',
+								request=request)
 
