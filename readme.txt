@@ -1,0 +1,1 @@
+1.scrapy + selenium + chromedriver 实现淘宝首页搜索框输入关键字返回商品列表页的信息
